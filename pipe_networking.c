@@ -17,6 +17,7 @@ int server_setup() {
   int from_client = 0;
   mkfifo("WKP",0666);
   from_client = open("WKP",O_RDONLY,0);
+  remove(WKP);
   return from_client;
 }
 
@@ -30,9 +31,13 @@ int server_setup() {
   returns the file descriptor for the upstream pipe (see server setup).
   =========================*/
 int server_handshake(int *to_client) {
+  char text[256];
   int from_client = server_setup();
-  mkfifo(getpid(),0666);
-  to_client = open(getpid(),O_WRONLY,0);
+  mkfifo("PP",0666);
+  *to_client = open("PP",O_WRONLY,0);
+  read(from_client, text,sizeof(text));
+  write(to_client, text, sizeof(text));
+  read(from_client, text, sizeof(text));
   return from_client;
 }
 
@@ -47,8 +52,8 @@ int server_handshake(int *to_client) {
   returns the file descriptor for the downstream pipe.
   =========================*/
 int client_handshake(int *to_server) {
-  int from_server = open(getpid(),O_RDONLY,0);
-  to_server = open("WKP",O_WRONLY,0);
+  int from_server = open("PP",O_RDONLY,0);
+  *to_server = open("WKP",O_WRONLY,0);
   return from_server;
 }
 
@@ -62,6 +67,6 @@ int client_handshake(int *to_server) {
   returns the file descriptor for the downstream pipe.
   =========================*/
 int server_connect(int from_client) {
-  int to_client  = open(getpid(),O_WRONLY,0);
+  int to_client  = open("PP",O_WRONLY,0);
   return to_client;
 }
