@@ -35,16 +35,16 @@ int server_setup() {
   returns the file descriptor for the upstream pipe (see server setup).
   =========================*/
 int server_handshake(int *to_client) {
+  srand(getpid());
   char text[256];
+  int rando[1];
   int from_client = server_setup();
-  printf("SERVER READ CLIENT\n");
   *to_client = open("PP",O_WRONLY,0);
-  read(from_client, text,sizeof(text));
-  printf("SERVER WRITE CLIENT\n");
-  write(*to_client, text, sizeof(text));
-  printf("SERVER CAN WRITE\n");
-  read(from_client, text, sizeof(text));
-  printf("SERVER RECIEVED PID: %s\n",text);
+  while(1){
+    rando[0] = rand();
+    write(*to_client,rando,sizeof(rando));
+    sleep(1);
+  }
   return from_client;
 }
 
@@ -65,20 +65,13 @@ int client_handshake(int *to_server) {
   *to_server = open("WKP",O_WRONLY,0);
   int from_server = open("PP",O_RDONLY,0);
   remove("PP");
-  sprintf(text,"%d",getpid());
-  printf("CLIENT WRITE PID\n");
-  write(*to_server,text,sizeof(text));
-  printf("CLIENT READ SERVER\n");
-  read(from_server, buff,sizeof(buff));
-  if(strcmp(buff,text) != 0){
-    printf("FAILED");
-    printf("%s\n",text);
-    printf("%s\n",buff);
-    return from_server;
+  int rando[1];
+  while(1){
+    if(read(from_server,rando,sizeof(rando)) == 0){
+      break;
+    }
+    printf("%d\n",rando[0]);
   }
-  printf("CLIENT WRITE SERVER\n");
-  write(*to_server,buff,sizeof(buff));
-  printf("CLIENT PID: %s\n",text);
   return from_server;
 }
 

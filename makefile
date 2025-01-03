@@ -9,8 +9,8 @@ server: basic_server.o pipe_networking.o
 basic_client.o: basic_client.c pipe_networking.h
 	@gcc -c basic_client.c
 
-basic_server.o: basic_server.c pipe_networking.h
-	@gcc -c basic_server.c
+basic_server.o: persistant_server.c pipe_networking.h
+	@gcc -c persistant_server.c
 
 pipe_networking.o: pipe_networking.c pipe_networking.h
 	@gcc -c pipe_networking.c
