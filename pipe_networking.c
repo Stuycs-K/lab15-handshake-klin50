@@ -16,12 +16,10 @@
   returns the file descriptor for the upstream pipe.
   =========================*/
 int server_setup() {
-  printf("SERVER SETUP\n");
   int from_client = 0;
   mkfifo("WKP",0666);
   from_client = open("WKP",O_RDONLY,0);
   remove("WKP");
-  printf("FINISHED SETTING UP\n");
   return from_client;
 }
 
@@ -35,19 +33,36 @@ int server_setup() {
   returns the file descriptor for the upstream pipe (see server setup).
   =========================*/
 int server_handshake(int *to_client) {
-  srand(getpid());
-  char text[256];
-  int rando[1];
   int from_client = server_setup();
   *to_client = open("PP",O_WRONLY,0);
-  while(1){
-    rando[0] = rand();
-    write(*to_client,rando,sizeof(rando));
-    sleep(1);
+  char buff[10];
+  char syn_ack[] = "SYN_ACK";
+  read(from_client,buff,sizeof(buff));
+  if(strcmp(buff,"SYN") != 0){
+    printf("Server handshake failed\n");
+  }
+  write(*to_client,syn_ack,sizeof(syn_ack));
+  read(from_client,buff,sizeof(buff));
+  if(strcmp(buff,"ACK") != 0){
+    printf("Server handshake failed\n");
   }
   return from_client;
 }
 
+int server_handshake_half(int *to_client, int from_client){
+  char buff[10];
+  char syn_ack[] = "SYN_ACK";
+  *to_client = open("PP",O_WRONLY,0);
+  read(from_client,buff,sizeof(buff));
+  if(strcmp(buff,"SYN") != 0){
+    printf("Server handshake failed\n");
+  }
+  write(*to_client,syn_ack,sizeof(syn_ack));
+  read(from_client,buff,sizeof(buff));
+  if(strcmp(buff,"ACK") != 0){
+    printf("Server handshake failed\n");
+  }
+}
 
 /*=========================
   client_handshake
@@ -59,12 +74,20 @@ int server_handshake(int *to_client) {
   returns the file descriptor for the downstream pipe.
   =========================*/
 int client_handshake(int *to_server) {
-  char text[256];
-  char buff[256];
   mkfifo("PP",0666);
   *to_server = open("WKP",O_WRONLY,0);
   int from_server = open("PP",O_RDONLY,0);
+  char syn[] = "SYN";
+  char ack[] = "ACK";
+  char buff[10];
+  write(*to_server,syn,sizeof(syn));
+  read(from_server,buff,sizeof(buff));
+  if(strcmp(buff,"SYN_ACK") != 0){
+    printf("Client handshake failed\n");
+  }
+  write(*to_server,ack,sizeof(ack));
   remove("PP");
+  printf("Client successfully connected\n");
   int rando[1];
   while(1){
     if(read(from_server,rando,sizeof(rando)) == 0){
